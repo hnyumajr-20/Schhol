@@ -29,20 +29,22 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-sm space-y-4 rounded-lg bg-white p-8 shadow"
+        className="w-full max-w-sm space-y-4 rounded-lg border-t-4 border-yellow-400 bg-white p-8 shadow"
       >
-        <h1 className="text-xl font-semibold text-slate-900">School MIS Login</h1>
+        <h1 className="text-xl font-semibold text-gray-900">
+          School <span className="text-yellow-500">MIS</span> Login
+        </h1>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-gray-700">
             Email / ID number / phone
           </label>
           <input
             {...register("identifier")}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
           />
           {errors.identifier && (
             <p className="mt-1 text-sm text-red-600">{errors.identifier.message}</p>
@@ -50,11 +52,11 @@ export function LoginPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Password</label>
+          <label className="block text-sm font-medium text-gray-700">Password</label>
           <input
             type="password"
             {...register("password")}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
           />
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -66,7 +68,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded bg-slate-900 px-3 py-2 text-white hover:bg-slate-800 disabled:opacity-50"
+          className="w-full rounded bg-yellow-500 px-3 py-2 font-semibold text-gray-900 hover:bg-yellow-400 disabled:opacity-50"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>

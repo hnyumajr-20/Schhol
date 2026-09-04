@@ -26,21 +26,12 @@ export function AdminDashboard() {
   const [tab, setTab] = useState<Tab>("Overview");
 
   return (
-    <DashboardShell title="Admin">
-      <nav className="flex gap-2 border-b border-slate-200 pb-2">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded px-3 py-1.5 text-sm font-medium ${
-              tab === t ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </nav>
-
+    <DashboardShell
+      title="Admin"
+      navItems={TABS}
+      activeNavItem={tab}
+      onNavItemChange={(t) => setTab(t as Tab)}
+    >
       {tab === "Overview" && <OverviewSection />}
       {tab === "Staff" && <StaffSection />}
       {tab === "Academic Calendar" && <AcademicCalendarSection />}
@@ -59,7 +50,7 @@ function formatTime(isoTime: string): string {
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-base font-semibold text-slate-900">{title}</h2>
+      <h2 className="mb-4 text-base font-semibold text-gray-900">{title}</h2>
       {children}
     </section>
   );
@@ -73,7 +64,7 @@ function OverviewSection() {
 
   return (
     <Card title="Summary">
-      <pre className="overflow-x-auto rounded bg-slate-50 p-4 text-sm">
+      <pre className="overflow-x-auto rounded bg-gray-50 p-4 text-sm">
         {data ? JSON.stringify(data, null, 2) : "Loading..."}
       </pre>
     </Card>
@@ -105,7 +96,7 @@ function StaffSection() {
           onSubmit={handleSubmit((v) => createStaff.mutate(v))}
           className="space-y-3"
         >
-          <select {...register("role")} className="w-full rounded border border-slate-300 px-3 py-2">
+          <select {...register("role")} className="w-full rounded border border-gray-300 px-3 py-2">
             <option value="registrar">Registrar</option>
             <option value="accountant">Accountant</option>
             <option value="teacher">Teacher</option>
@@ -113,27 +104,27 @@ function StaffSection() {
             <option value="it_staff">IT Staff</option>
             <option value="admin">Admin</option>
           </select>
-          <input placeholder="First name" {...register("first_name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Last name" {...register("last_name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input type="date" {...register("date_of_birth")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Address" {...register("address")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Email" {...register("email")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Phone" {...register("phone")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input type="number" step="0.01" placeholder="Salary" {...register("salary")} className="w-full rounded border border-slate-300 px-3 py-2" />
+          <input placeholder="First name" {...register("first_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Last name" {...register("last_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input type="date" {...register("date_of_birth")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Address" {...register("address")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Email" {...register("email")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Phone" {...register("phone")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input type="number" step="0.01" placeholder="Salary" {...register("salary")} className="w-full rounded border border-gray-300 px-3 py-2" />
           {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
           {createStaff.isError && <p className="text-sm text-red-600">Failed to create staff.</p>}
-          <button disabled={isSubmitting} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
+          <button disabled={isSubmitting} className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400 disabled:opacity-50">
             Create + send onboarding email
           </button>
         </form>
       </Card>
 
       <Card title="Staff directory">
-        <ul className="divide-y divide-slate-100 text-sm">
+        <ul className="divide-y divide-gray-100 text-sm">
           {(staff ?? []).map((s: any) => (
             <li key={s.id} className="flex justify-between py-2">
               <span>{s.first_name} {s.last_name} ({s.role})</span>
-              <span className="text-slate-500">{s.status}</span>
+              <span className="text-gray-500">{s.status}</span>
             </li>
           ))}
         </ul>
@@ -165,22 +156,22 @@ function AcademicCalendarSection() {
     <div className="grid gap-6 md:grid-cols-2">
       <Card title="Create academic year">
         <form onSubmit={handleSubmit((v) => createYear.mutate(v))} className="space-y-3">
-          <input placeholder="Name (e.g. 2026/2027)" {...register("name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input type="date" {...register("start_date")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input type="date" {...register("end_date")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <button className="rounded bg-slate-900 px-4 py-2 text-white">Create</button>
+          <input placeholder="Name (e.g. 2026/2027)" {...register("name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input type="date" {...register("start_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input type="date" {...register("end_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Create</button>
         </form>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-gray-500">
           Semesters and periods are added from each year's detail once created (2 semesters, 3 periods each, per PRD 4.1.9).
         </p>
       </Card>
 
       <Card title="Academic years">
-        <ul className="divide-y divide-slate-100 text-sm">
+        <ul className="divide-y divide-gray-100 text-sm">
           {(years ?? []).map((y: any) => (
             <li key={y.id} className="flex justify-between py-2">
               <span>{y.name}</span>
-              <span className="text-slate-500">{y.status}</span>
+              <span className="text-gray-500">{y.status}</span>
             </li>
           ))}
         </ul>
@@ -222,15 +213,15 @@ function ClassesSection() {
     <div className="grid gap-6 md:grid-cols-2">
       <Card title="Create class">
         <form onSubmit={classForm.handleSubmit((v) => createClass.mutate(v))} className="space-y-3">
-          <input placeholder="Name (e.g. Grade 4A)" {...classForm.register("name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input type="number" step="0.01" placeholder="Fixed fee" {...classForm.register("fixed_fee")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input type="number" placeholder="Max students" {...classForm.register("max_students")} className="w-full rounded border border-slate-300 px-3 py-2" />
+          <input placeholder="Name (e.g. Grade 4A)" {...classForm.register("name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input type="number" step="0.01" placeholder="Fixed fee" {...classForm.register("fixed_fee")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input type="number" placeholder="Max students" {...classForm.register("max_students")} className="w-full rounded border border-gray-300 px-3 py-2" />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" {...classForm.register("is_self_contained")} /> Self-contained
           </label>
-          <button className="rounded bg-slate-900 px-4 py-2 text-white">Create class</button>
+          <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Create class</button>
         </form>
-        <ul className="mt-4 divide-y divide-slate-100 text-sm">
+        <ul className="mt-4 divide-y divide-gray-100 text-sm">
           {(classes ?? []).map((c: any) => (
             <li key={c.id} className="py-2">{c.name} — max {c.max_students}</li>
           ))}
@@ -239,11 +230,11 @@ function ClassesSection() {
 
       <Card title="Create subject">
         <form onSubmit={subjectForm.handleSubmit((v) => createSubject.mutate(v))} className="space-y-3">
-          <input placeholder="Name" {...subjectForm.register("name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Code" {...subjectForm.register("code")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <button className="rounded bg-slate-900 px-4 py-2 text-white">Create subject</button>
+          <input placeholder="Name" {...subjectForm.register("name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Code" {...subjectForm.register("code")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Create subject</button>
         </form>
-        <ul className="mt-4 divide-y divide-slate-100 text-sm">
+        <ul className="mt-4 divide-y divide-gray-100 text-sm">
           {(subjects ?? []).map((s: any) => (
             <li key={s.id} className="py-2">{s.name} ({s.code})</li>
           ))}
@@ -290,11 +281,11 @@ function TimetableSection() {
     <div className="grid gap-6 md:grid-cols-2">
       <Card title="Weekly timetable slots">
         <form onSubmit={slotForm.handleSubmit((v) => createSlot.mutate(v))} className="space-y-3">
-          <input type="time" {...slotForm.register("start_time")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input type="time" {...slotForm.register("end_time")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <button className="rounded bg-slate-900 px-4 py-2 text-white">Add slot</button>
+          <input type="time" {...slotForm.register("start_time")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input type="time" {...slotForm.register("end_time")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Add slot</button>
         </form>
-        <ul className="mt-4 divide-y divide-slate-100 text-sm">
+        <ul className="mt-4 divide-y divide-gray-100 text-sm">
           {(slots ?? []).map((s: any) => (
             <li key={s.id} className="py-2">{formatTime(s.start_time)} – {formatTime(s.end_time)}</li>
           ))}
@@ -303,11 +294,11 @@ function TimetableSection() {
 
       <Card title="Place a class-subject-teacher into a slot">
         <form onSubmit={entryForm.handleSubmit((v) => createEntry.mutate(v))} className="space-y-3">
-          <input placeholder="Class ID" {...entryForm.register("class_id")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Subject ID" {...entryForm.register("subject_id")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Teacher ID" {...entryForm.register("teacher_id")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <input placeholder="Timetable Slot ID" {...entryForm.register("timetable_slot_id")} className="w-full rounded border border-slate-300 px-3 py-2" />
-          <select {...entryForm.register("day_of_week", { valueAsNumber: true })} className="w-full rounded border border-slate-300 px-3 py-2">
+          <input placeholder="Class ID" {...entryForm.register("class_id")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Subject ID" {...entryForm.register("subject_id")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Teacher ID" {...entryForm.register("teacher_id")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <input placeholder="Timetable Slot ID" {...entryForm.register("timetable_slot_id")} className="w-full rounded border border-gray-300 px-3 py-2" />
+          <select {...entryForm.register("day_of_week", { valueAsNumber: true })} className="w-full rounded border border-gray-300 px-3 py-2">
             <option value={1}>Monday</option>
             <option value={2}>Tuesday</option>
             <option value={3}>Wednesday</option>
@@ -315,9 +306,9 @@ function TimetableSection() {
             <option value={5}>Friday</option>
           </select>
           {entryError && <p className="text-sm text-red-600">{entryError}</p>}
-          <button className="rounded bg-slate-900 px-4 py-2 text-white">Place entry</button>
+          <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Place entry</button>
         </form>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-gray-500">
           IDs are pasted from the Staff/Classes/Subjects lists for now — a picker UI comes later.
         </p>
       </Card>

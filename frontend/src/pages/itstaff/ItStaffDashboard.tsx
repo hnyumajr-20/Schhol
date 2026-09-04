@@ -9,7 +9,7 @@ import { api } from "../../lib/api";
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-base font-semibold text-slate-900">{title}</h2>
+      <h2 className="mb-4 text-base font-semibold text-gray-900">{title}</h2>
       {children}
     </section>
   );
@@ -50,13 +50,13 @@ function DeviceRegisterCard() {
   return (
     <Card title="Register attendance/library device">
       <form onSubmit={handleSubmit((v) => createDevice.mutate(v))} className="space-y-3">
-        <input placeholder="Device name" {...register("device_name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <select {...register("purpose")} className="w-full rounded border border-slate-300 px-3 py-2">
+        <input placeholder="Device name" {...register("device_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <select {...register("purpose")} className="w-full rounded border border-gray-300 px-3 py-2">
           <option value="attendance">Attendance</option>
           <option value="library">Library</option>
         </select>
-        <input placeholder="Class ID (attendance devices)" {...register("class_id")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <button className="rounded bg-slate-900 px-4 py-2 text-white">Register device</button>
+        <input placeholder="Class ID (attendance devices)" {...register("class_id")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Register device</button>
       </form>
 
       {apiKey && (
@@ -65,11 +65,11 @@ function DeviceRegisterCard() {
         </p>
       )}
 
-      <ul className="mt-4 divide-y divide-slate-100 text-sm">
+      <ul className="mt-4 divide-y divide-gray-100 text-sm">
         {(devices ?? []).map((d: any) => (
           <li key={d.id} className="flex justify-between py-2">
             <span>{d.device_name} ({d.purpose})</span>
-            <span className="text-slate-500">{d.status}</span>
+            <span className="text-gray-500">{d.status}</span>
           </li>
         ))}
       </ul>
@@ -95,7 +95,7 @@ function RfidAssignCard() {
 
   return (
     <Card title="Assign RFID card">
-      <p className="mb-3 text-xs text-slate-500">
+      <p className="mb-3 text-xs text-gray-500">
         Read the blank card's UID with the third-party reader software, then paste it below (PRD 1.1 / 4.3.6).
       </p>
       <div className="space-y-3">
@@ -103,19 +103,19 @@ function RfidAssignCard() {
           placeholder="User ID (staff or student)"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
-          className="w-full rounded border border-slate-300 px-3 py-2"
+          className="w-full rounded border border-gray-300 px-3 py-2"
         />
         <form onSubmit={handleSubmit((v) => assign.mutate(v))} className="flex gap-2">
           <input
             placeholder="Pasted RFID UID"
             {...register("rfid_uid")}
-            className="w-full rounded border border-slate-300 px-3 py-2"
+            className="w-full rounded border border-gray-300 px-3 py-2"
           />
-          <button disabled={!userId || isSubmitting} className="whitespace-nowrap rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
+          <button disabled={!userId || isSubmitting} className="whitespace-nowrap rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400 disabled:opacity-50">
             Assign
           </button>
         </form>
-        {status && <p className="text-sm text-slate-600">{status}</p>}
+        {status && <p className="text-sm text-gray-600">{status}</p>}
       </div>
     </Card>
   );
@@ -138,17 +138,17 @@ function PasswordResetCard() {
           placeholder="User ID"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
-          className="w-full max-w-sm rounded border border-slate-300 px-3 py-2"
+          className="w-full max-w-sm rounded border border-gray-300 px-3 py-2"
         />
         <button
           disabled={!userId}
           onClick={() => reset.mutate()}
-          className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50"
+          className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400 disabled:opacity-50"
         >
           Reset password
         </button>
       </div>
-      {status && <p className="mt-2 text-sm text-slate-600">{status}</p>}
+      {status && <p className="mt-2 text-sm text-gray-600">{status}</p>}
     </Card>
   );
 }

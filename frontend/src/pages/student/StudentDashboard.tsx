@@ -5,7 +5,7 @@ import { api } from "../../lib/api";
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-base font-semibold text-slate-900">{title}</h2>
+      <h2 className="mb-4 text-base font-semibold text-gray-900">{title}</h2>
       {children}
     </section>
   );
@@ -25,17 +25,17 @@ export function StudentDashboard() {
     <DashboardShell title="Student / Parent">
       <div className="grid gap-6 md:grid-cols-2">
         <Card title="My timetable">
-          <pre className="overflow-x-auto rounded bg-slate-50 p-3 text-xs">
+          <pre className="overflow-x-auto rounded bg-gray-50 p-3 text-xs">
             {timetable ? JSON.stringify(timetable, null, 2) : "Loading..."}
           </pre>
         </Card>
         <Card title="My attendance">
-          <pre className="overflow-x-auto rounded bg-slate-50 p-3 text-xs">
+          <pre className="overflow-x-auto rounded bg-gray-50 p-3 text-xs">
             {attendance ? JSON.stringify(attendance, null, 2) : "Loading..."}
           </pre>
         </Card>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-gray-500">
         Grades, fee invoices, and messaging land in Phase 2/3 per the PRD — this is a read-only Phase 1 stub.
       </p>
     </DashboardShell>

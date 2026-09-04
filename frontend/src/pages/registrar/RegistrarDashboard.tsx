@@ -16,7 +16,7 @@ import { api } from "../../lib/api";
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-base font-semibold text-slate-900">{title}</h2>
+      <h2 className="mb-4 text-base font-semibold text-gray-900">{title}</h2>
       {children}
     </section>
   );
@@ -52,24 +52,24 @@ function ParentMatchCard() {
   return (
     <Card title="Find or create parent">
       <form onSubmit={matchForm.handleSubmit((v) => matchParent.mutate(v))} className="space-y-3">
-        <input placeholder="Parent phone" {...matchForm.register("phone")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <button className="rounded bg-slate-900 px-4 py-2 text-white">Search by phone</button>
+        <input placeholder="Parent phone" {...matchForm.register("phone")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Search by phone</button>
       </form>
 
       {result === null && matchParent.isSuccess && (
-        <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
-          <p className="text-sm text-slate-600">No match — create a new parent:</p>
+        <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+          <p className="text-sm text-gray-600">No match — create a new parent:</p>
           <form onSubmit={createForm.handleSubmit((v) => createParent.mutate(v))} className="space-y-3">
-            <input placeholder="First name" {...createForm.register("first_name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-            <input placeholder="Last name" {...createForm.register("last_name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-            <input placeholder="Phone" {...createForm.register("phone")} className="w-full rounded border border-slate-300 px-3 py-2" />
-            <button className="rounded bg-slate-900 px-4 py-2 text-white">Create parent</button>
+            <input placeholder="First name" {...createForm.register("first_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input placeholder="Last name" {...createForm.register("last_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input placeholder="Phone" {...createForm.register("phone")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Create parent</button>
           </form>
         </div>
       )}
 
       {result && (
-        <pre className="mt-4 overflow-x-auto rounded bg-slate-50 p-3 text-xs">
+        <pre className="mt-4 overflow-x-auto rounded bg-gray-50 p-3 text-xs">
           {JSON.stringify(result, null, 2)}
         </pre>
       )}
@@ -94,14 +94,14 @@ function StudentIntakeCard() {
   return (
     <Card title="Student intake">
       <form onSubmit={handleSubmit((v) => intake.mutate(v))} className="space-y-3">
-        <input placeholder="First name" {...register("first_name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <input placeholder="Last name" {...register("last_name")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <input type="date" {...register("date_of_birth")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <input placeholder="Gender" {...register("gender")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <input placeholder="Class ID (optional)" {...register("class_id")} className="w-full rounded border border-slate-300 px-3 py-2" />
-        <input placeholder="Parent ID (from match/create above)" {...register("parent_id")} className="w-full rounded border border-slate-300 px-3 py-2" />
+        <input placeholder="First name" {...register("first_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <input placeholder="Last name" {...register("last_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <input type="date" {...register("date_of_birth")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <input placeholder="Gender" {...register("gender")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <input placeholder="Class ID (optional)" {...register("class_id")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <input placeholder="Parent ID (from match/create above)" {...register("parent_id")} className="w-full rounded border border-gray-300 px-3 py-2" />
         {intake.isError && <p className="text-sm text-red-600">Intake failed.</p>}
-        <button disabled={isSubmitting} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
+        <button disabled={isSubmitting} className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400 disabled:opacity-50">
           Submit intake
         </button>
       </form>
@@ -123,19 +123,19 @@ function PendingApprovalsCard() {
 
   return (
     <Card title="Pending admissions">
-      <ul className="divide-y divide-slate-100 text-sm">
+      <ul className="divide-y divide-gray-100 text-sm">
         {(pending ?? []).map((s: any) => (
           <li key={s.id} className="flex items-center justify-between py-2">
             <span>{s.first_name} {s.last_name}</span>
             <button
               onClick={() => approve.mutate(s.id)}
-              className="rounded bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700"
+              className="rounded bg-yellow-500 px-3 py-1 font-semibold text-gray-900 hover:bg-yellow-400"
             >
               Approve
             </button>
           </li>
         ))}
-        {(pending ?? []).length === 0 && <li className="py-2 text-slate-500">No pending students.</li>}
+        {(pending ?? []).length === 0 && <li className="py-2 text-gray-500">No pending students.</li>}
       </ul>
     </Card>
   );
