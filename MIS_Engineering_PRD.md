@@ -48,18 +48,25 @@ Carry these over from the functional spec; they affect the schema below and shou
 | Testing | Jest + Supertest (backend), Vitest + React Testing Library (frontend) | |
 | Deployment | Docker Compose locally (postgres, redis, api, web); CI via GitHub Actions | |
 
-### 2.1 Monorepo layout
+### 2.1 Repo layout
+
+Frontend and backend are top-level siblings, not nested — they deploy to different hosts (e.g. a static host for the frontend, a Node host for the backend), so each folder builds independently even though `packages/shared` links them for local dev:
 
 ```
-/apps
-  /web            React frontend
-  /api            Express backend
+/frontend         React frontend (Vite)
+/backend          Express backend (Prisma)
 /packages
-  /shared         Zod schemas, TS types, constants shared by web + api
+  /shared         Zod schemas, TS types, constants shared by frontend + backend
 /infra
-  docker-compose.yml
-  /migrations     Prisma migrations (generated)
+  docker-compose.yml   (optional — see 2.2 on local Postgres/Redis)
+  /migrations          Prisma migrations (generated)
 ```
+
+npm workspaces wires `frontend`, `backend`, and `packages/*` together so `packages/shared` can be imported as `@school-mis/shared` from both sides without publishing it — this is a dev-time convenience only and doesn't require the two apps to be deployed together.
+
+### 2.2 Local dev infrastructure note
+
+The table above assumes Docker Compose for local Postgres/Redis/MinIO. If Docker isn't available in your dev environment, the equally valid fallback is: a natively installed Postgres, a natively installed Redis (or BullMQ running in-process without a queue for early development), and a local-filesystem storage adapter shaped like the S3 client interface (`putObject`/`getObject`) so swapping in real S3/R2 later touches one file. Whichever path you take, keep `DATABASE_URL`/`REDIS_URL`/`STORAGE_*` as the only things that change between local and production.
 
 ---
 
