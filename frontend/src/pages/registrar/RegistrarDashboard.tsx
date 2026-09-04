@@ -40,9 +40,7 @@ function ParentMatchCard() {
   const createForm = useForm<CreateParentInput>({ resolver: zodResolver(createParentSchema) });
 
   const matchParent = useMutation({
-    mutationFn: (v: MatchParentInput) =>
-      // Not tied to a student yet at this step — search-only convenience call.
-      api.post(`/students/00000000-0000-0000-0000-000000000000/match-parent`, v).then((r) => r.data),
+    mutationFn: (v: MatchParentInput) => api.post(`/parents/match`, v).then((r) => r.data),
     onSuccess: (data) => setResult(data),
   });
 

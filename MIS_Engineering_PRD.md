@@ -116,7 +116,11 @@ CREATE TABLE users (
   rfid_uid VARCHAR(64) UNIQUE,                 -- set only via the IT Staff scoped endpoint (4.3.6)
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT users_identifier_present CHECK (email IS NOT NULL OR id_number IS NOT NULL)
+  -- Phone counts as a login identifier too (auth login already accepts it,
+  -- 5.1), and a 'pending' placeholder (student/parent intake, before
+  -- approval assigns real credentials) can't log in at all regardless, so
+  -- it's exempt rather than forced to fake an identifier early.
+  CONSTRAINT users_identifier_present CHECK (email IS NOT NULL OR id_number IS NOT NULL OR phone IS NOT NULL OR status = 'pending')
 );
 
 CREATE TABLE rfid_assignment_log (               -- audit trail behind 4.3.6

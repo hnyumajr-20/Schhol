@@ -187,7 +187,6 @@ model User {
   passwordResetTokens       PasswordResetToken[]
   settingsUpdated           SystemSetting[]
 
-  @@check(dbgenerated("email IS NOT NULL OR id_number IS NOT NULL"), map: "users_identifier_present")
   @@map("users")
 }
 
@@ -267,7 +266,6 @@ model Semester {
   feeInvoices       FeeInvoice[]
 
   @@unique([academicYearId, sequence])
-  @@check(dbgenerated("sequence IN (1,2)"), map: "semesters_sequence_check")
   @@map("semesters")
 }
 
@@ -285,7 +283,6 @@ model Period {
   grades   Grade[]
 
   @@unique([semesterId, sequence])
-  @@check(dbgenerated("sequence BETWEEN 1 AND 3"), map: "periods_sequence_check")
   @@map("periods")
 }
 
@@ -356,7 +353,6 @@ model StudentProfile {
   class  Class? @relation(fields: [classId], references: [id])
   parent User?  @relation("StudentParent", fields: [parentId], references: [id])
 
-  @@check(dbgenerated("admission_status IN ('pending','approved')"), map: "student_profiles_admission_status_check")
   @@map("student_profiles")
 }
 
@@ -388,7 +384,6 @@ model TimetableEntry {
 
   @@unique([teacherId, timetableSlotId, dayOfWeek], map: "timetable_entries_teacher_slot_day_key")
   @@unique([classId, timetableSlotId, dayOfWeek], map: "timetable_entries_class_slot_day_key")
-  @@check(dbgenerated("day_of_week BETWEEN 1 AND 5"), map: "timetable_entries_day_of_week_check")
   @@map("timetable_entries")
 }
 
@@ -413,7 +408,6 @@ model AttendanceRecord {
   recorder User?    @relation("AttendanceRecordedBy", fields: [recordedBy], references: [id])
 
   @@unique([studentId, date, subjectId, session])
-  @@check(dbgenerated("session IN ('morning','end_of_day')"), map: "attendance_records_session_check")
   @@map("attendance_records")
 }
 

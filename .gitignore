@@ -3,6 +3,8 @@ dist/
 build/
 .env
 *.log
+*.pid
+*.tsbuildinfo
 .DS_Store
 backend/storage/
 backend/prisma/dev.db
