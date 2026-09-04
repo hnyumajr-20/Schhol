@@ -14,11 +14,11 @@ their deployments.
 ## First-time setup
 
 1. **Database** — create a role + database (adjust credentials as you like, then match them in `backend/.env`).
-   Named `school_mis_node` deliberately, not `school_mis` — that name is already in use by the unrelated
+   Named `school1_mis` deliberately, not `school_mis` — that name is already in use by the unrelated
    Laravel project at `Finalyear/backend` on this machine:
    ```sql
    CREATE ROLE school_mis LOGIN PASSWORD 'school_mis';
-   CREATE DATABASE school_mis_node OWNER school_mis;
+   CREATE DATABASE school1_mis OWNER school_mis;
    ```
 2. **Redis** — install and make sure it's running on `localhost:6379` (`redis-cli ping` should return `PONG`).
 3. **Install dependencies** (from the repo root):
