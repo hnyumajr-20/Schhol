@@ -50,6 +50,12 @@ export function AdminDashboard() {
   );
 }
 
+function formatTime(isoTime: string): string {
+  // Timetable slots store start/end as a full ISO timestamp on 1970-01-01
+  // (a Postgres TIME column round-tripped through Prisma) — show just HH:MM.
+  return new Date(isoTime).toISOString().slice(11, 16);
+}
+
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg bg-white p-6 shadow-sm">
@@ -290,7 +296,7 @@ function TimetableSection() {
         </form>
         <ul className="mt-4 divide-y divide-slate-100 text-sm">
           {(slots ?? []).map((s: any) => (
-            <li key={s.id} className="py-2">{s.start_time} – {s.end_time}</li>
+            <li key={s.id} className="py-2">{formatTime(s.start_time)} – {formatTime(s.end_time)}</li>
           ))}
         </ul>
       </Card>

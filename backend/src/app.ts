@@ -5,6 +5,7 @@ import pinoHttp from "pino-http";
 import { env } from "./config/env";
 import { logger } from "./lib/logger";
 import { errorHandler } from "./middleware/errorHandler";
+import { snakeCaseResponse } from "./middleware/snakeCaseResponse";
 
 import { authRouter } from "./modules/auth/auth.router";
 import { staffRouter } from "./modules/staff/staff.router";
@@ -25,6 +26,7 @@ export function createApp() {
   app.use(express.json());
   app.use(cookieParser());
   app.use(pinoHttp({ logger }));
+  app.use(snakeCaseResponse);
   app.use("/files", express.static(env.STORAGE_DIR));
 
   const v1 = express.Router();
