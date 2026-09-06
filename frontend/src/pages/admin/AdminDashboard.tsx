@@ -257,36 +257,26 @@ function StaffSection() {
 
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-3 gap-4">
+        <StatTile label="Active" value={active.length} />
+        <StatTile label="Pending" value={pending.length} accent={pending.length > 0 ? "warning" : "yellow"} />
+        <StatTile label="Inactive" value={inactive.length} />
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-6">
-          <div>
-            <p className="text-2xl font-semibold text-gray-900">{active.length}</p>
-            <p className="text-xs text-gray-500">Active</p>
-          </div>
-          <div>
-            <p className="text-2xl font-semibold text-gray-900">{pending.length}</p>
-            <p className="text-xs text-gray-500">Pending</p>
-          </div>
-          <div>
-            <p className="text-2xl font-semibold text-gray-900">{inactive.length}</p>
-            <p className="text-xs text-gray-500">Inactive</p>
-          </div>
-        </div>
-        <div className="flex flex-1 items-center gap-3 sm:flex-initial">
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, email, phone, ID..."
-            className="w-full min-w-0 rounded border border-gray-300 px-3 py-2 text-sm sm:w-64"
-          />
-          <button
-            onClick={() => setShowCreate(true)}
-            className="whitespace-nowrap rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400"
-          >
-            + Create staff
-          </button>
-        </div>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name, email, phone, ID..."
+          className="w-full min-w-0 rounded border border-gray-300 px-3 py-2 text-sm sm:w-64"
+        />
+        <button
+          onClick={() => setShowCreate(true)}
+          className="whitespace-nowrap rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400"
+        >
+          + Create staff
+        </button>
       </div>
 
       <Card title={`Active staff (${active.length})`}>
