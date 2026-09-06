@@ -56,18 +56,52 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
+interface StatTileProps {
+  label: string;
+  value: number | undefined;
+  accent?: "yellow" | "warning";
+  hint?: string;
+}
+
+function StatTile({ label, value, accent = "yellow", hint }: StatTileProps) {
+  const accentClass = accent === "warning" ? "bg-amber-500" : "bg-yellow-500";
+  return (
+    <div className="rounded-lg bg-white p-5 shadow-sm">
+      <div className={`mb-3 h-1.5 w-8 rounded-full ${accentClass}`} />
+      <p className="text-3xl font-semibold text-gray-900">
+        {value === undefined ? (
+          <span className="inline-block h-8 w-14 animate-pulse rounded bg-gray-100 align-middle" />
+        ) : (
+          value.toLocaleString()
+        )}
+      </p>
+      <p className="mt-1 text-sm text-gray-500">{label}</p>
+      {hint && <p className="mt-2 text-xs font-medium text-amber-700">{hint}</p>}
+    </div>
+  );
+}
+
 function OverviewSection() {
   const { data } = useQuery({
     queryKey: ["dashboard-summary"],
     queryFn: () => api.get("/dashboard/summary").then((r) => r.data),
   });
 
+  const pending = data?.pending_students as number | undefined;
+
   return (
-    <Card title="Summary">
-      <pre className="overflow-x-auto rounded bg-gray-50 p-4 text-sm">
-        {data ? JSON.stringify(data, null, 2) : "Loading..."}
-      </pre>
-    </Card>
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <StatTile label="Staff" value={data?.staff_count} />
+      <StatTile label="Approved students" value={data?.approved_students} />
+      <StatTile
+        label="Pending admissions"
+        value={pending}
+        accent={pending && pending > 0 ? "warning" : "yellow"}
+        hint={pending && pending > 0 ? "Needs review" : undefined}
+      />
+      <StatTile label="Classes" value={data?.class_count} />
+      <StatTile label="Devices online" value={data?.devices_online} />
+    </div>
   );
 }
 
