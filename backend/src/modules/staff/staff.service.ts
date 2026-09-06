@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import crypto from "node:crypto";
 import { prisma } from "../../lib/prisma";
-import { generateIdNumber, generateTempPassword } from "../../lib/credentials";
+import { generateStaffIdNumber, generateTempPassword } from "../../lib/credentials";
 import { NotFoundError } from "../../lib/errors";
 import { onboardingQueue } from "../../jobs/queues";
 import { putObject } from "../../lib/storage";
@@ -25,7 +25,7 @@ export async function createStaff(
   input: CreateStaffInput,
   files?: { photo?: Express.Multer.File; cv?: Express.Multer.File }
 ) {
-  const idNumber = await generateIdNumber(input.role);
+  const idNumber = await generateStaffIdNumber();
   const tempPassword = generateTempPassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 

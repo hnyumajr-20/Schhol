@@ -40,6 +40,13 @@ async function main() {
     update: {},
     create: { key: "currency", value: "LRD" },
   });
+  // Staff ID numbers are STF-1001, STF-1002, ... (lib/credentials.ts's
+  // generateStaffIdNumber) — seeded to 1000 so the first staff created gets 1001.
+  await prisma.systemSetting.upsert({
+    where: { key: "staff_id_sequence" },
+    update: {},
+    create: { key: "staff_id_sequence", value: 1000 },
+  });
 
   const defaultSlots: [string, string][] = [
     ["08:00", "08:45"],

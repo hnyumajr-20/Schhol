@@ -24,6 +24,24 @@ export async function generateIdNumber(role: string): Promise<string> {
   throw new Error("Could not generate a unique ID number, please retry");
 }
 
+// Per PRD: staff ID numbers are STF-1001, STF-1002, ... — one shared
+// sequence across every staff role (not per-role prefixes), starting at
+// 1001. The counter lives in system_settings (seeded to 1000) and is
+// incremented with a single atomic UPDATE so concurrent staff creation
+// can't hand out the same number.
+export async function generateStaffIdNumber(): Promise<string> {
+  const rows = await prisma.$queryRaw<{ value: number }[]>`
+    UPDATE system_settings
+    SET value = to_jsonb((value #>> '{}')::int + 1), updated_at = now()
+    WHERE key = 'staff_id_sequence'
+    RETURNING value
+  `;
+  if (rows.length === 0) {
+    throw new Error("staff_id_sequence setting is missing — re-run the seed script");
+  }
+  return `STF-${rows[0].value}`;
+}
+
 export function generateTempPassword(): string {
   return crypto.randomBytes(9).toString("base64url"); // 12 chars, URL-safe
 }
