@@ -3,6 +3,7 @@ import { createStaffSchema, updateStaffSchema, updateContactSchema } from "@scho
 import { requireAuth } from "../../middleware/auth";
 import { requireRole } from "../../middleware/rbac";
 import { validateBody } from "../../middleware/validate";
+import { upload } from "../../middleware/upload";
 import { asyncHandler } from "../../lib/asyncHandler";
 import * as ctrl from "./staff.controller";
 
@@ -10,7 +11,15 @@ export const staffRouter = Router();
 staffRouter.use(requireAuth, requireRole("admin"));
 
 staffRouter.get("/", asyncHandler(ctrl.listStaffHandler));
-staffRouter.post("/", validateBody(createStaffSchema), asyncHandler(ctrl.createStaffHandler));
+staffRouter.post(
+  "/",
+  upload.fields([
+    { name: "photo", maxCount: 1 },
+    { name: "cv", maxCount: 1 },
+  ]),
+  validateBody(createStaffSchema),
+  asyncHandler(ctrl.createStaffHandler)
+);
 staffRouter.patch("/:id", validateBody(updateStaffSchema), asyncHandler(ctrl.updateStaffHandler));
 staffRouter.patch("/:id/contact", validateBody(updateContactSchema), asyncHandler(ctrl.updateContactHandler));
 staffRouter.post("/:id/deactivate", asyncHandler(ctrl.deactivateStaffHandler));

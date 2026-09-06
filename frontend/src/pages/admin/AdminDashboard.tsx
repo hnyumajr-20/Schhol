@@ -144,6 +144,7 @@ function StaffTable({
             <th className="py-2 pr-4 font-medium">Role</th>
             <th className="py-2 pr-4 font-medium">Contact</th>
             <th className="py-2 pr-4 font-medium">ID number</th>
+            <th className="py-2 pr-4 font-medium">CV</th>
             <th className="py-2 pr-4 font-medium">Status</th>
             {onDeactivate && <th className="py-2 pr-4 font-medium" />}
           </tr>
@@ -151,12 +152,33 @@ function StaffTable({
         <tbody className="divide-y divide-gray-100">
           {rows.map((s) => (
             <tr key={s.id} className="hover:bg-gray-50">
-              <td className="py-2.5 pr-4 font-medium text-gray-900">
-                {s.first_name} {s.last_name}
+              <td className="py-2.5 pr-4">
+                <div className="flex items-center gap-2.5">
+                  {s.image_url ? (
+                    <img src={s.image_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
+                      {s.first_name?.[0]}
+                      {s.last_name?.[0]}
+                    </span>
+                  )}
+                  <span className="font-medium text-gray-900">
+                    {s.first_name} {s.last_name}
+                  </span>
+                </div>
               </td>
               <td className="py-2.5 pr-4 text-gray-600">{ROLE_LABEL(s.role)}</td>
               <td className="py-2.5 pr-4 text-gray-600">{s.email ?? s.phone ?? "—"}</td>
               <td className="py-2.5 pr-4 text-gray-600">{s.id_number ?? "—"}</td>
+              <td className="py-2.5 pr-4">
+                {s.cv_url ? (
+                  <a href={s.cv_url} target="_blank" rel="noreferrer" className="text-yellow-700 hover:underline">
+                    View
+                  </a>
+                ) : (
+                  <span className="text-gray-400">—</span>
+                )}
+              </td>
               <td className="py-2.5 pr-4">
                 <StatusBadge status={s.status} />
               </td>
@@ -183,6 +205,9 @@ function StaffTable({
 function StaffSection() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [query, setQuery] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const { data: staff } = useQuery({
     queryKey: ["staff"],
     queryFn: () => api.get("/staff").then((r) => r.data),
@@ -196,10 +221,20 @@ function StaffSection() {
   } = useForm<CreateStaffInput>({ resolver: zodResolver(createStaffSchema) });
 
   const createStaff = useMutation({
-    mutationFn: (values: CreateStaffInput) => api.post("/staff", values),
+    mutationFn: (values: CreateStaffInput) => {
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(values)) {
+        if (value !== undefined && value !== "") formData.append(key, String(value));
+      }
+      if (photoFile) formData.append("photo", photoFile);
+      if (cvFile) formData.append("cv", cvFile);
+      return api.post("/staff", formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       reset();
+      setPhotoFile(null);
+      setCvFile(null);
       setShowCreate(false);
     },
   });
@@ -209,14 +244,20 @@ function StaffSection() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["staff"] }),
   });
 
-  const list: any[] = staff ?? [];
+  const q = query.trim().toLowerCase();
+  const list: any[] = (staff ?? []).filter((s: any) => {
+    if (!q) return true;
+    return [s.first_name, s.last_name, s.email, s.phone, s.id_number, s.role]
+      .filter(Boolean)
+      .some((field: string) => field.toLowerCase().includes(q));
+  });
   const active = list.filter((s) => s.status === "active");
   const pending = list.filter((s) => s.status === "pending");
   const inactive = list.filter((s) => s.status === "inactive");
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-6">
           <div>
             <p className="text-2xl font-semibold text-gray-900">{active.length}</p>
@@ -231,12 +272,21 @@ function StaffSection() {
             <p className="text-xs text-gray-500">Inactive</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400"
-        >
-          + Create staff
-        </button>
+        <div className="flex flex-1 items-center gap-3 sm:flex-initial">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, email, phone, ID..."
+            className="w-full min-w-0 rounded border border-gray-300 px-3 py-2 text-sm sm:w-64"
+          />
+          <button
+            onClick={() => setShowCreate(true)}
+            className="whitespace-nowrap rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400"
+          >
+            + Create staff
+          </button>
+        </div>
       </div>
 
       <Card title={`Active staff (${active.length})`}>
@@ -268,11 +318,39 @@ function StaffSection() {
             </select>
             <input placeholder="First name" {...register("first_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
             <input placeholder="Last name" {...register("last_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
-            <input type="date" {...register("date_of_birth")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-500">Date of birth</label>
+              <input type="date" {...register("date_of_birth")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            </div>
             <input placeholder="Address" {...register("address")} className="w-full rounded border border-gray-300 px-3 py-2" />
             <input placeholder="Email" {...register("email")} className="w-full rounded border border-gray-300 px-3 py-2" />
             <input placeholder="Phone" {...register("phone")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input
+              placeholder="Emergency contact"
+              {...register("emergency_contact")}
+              className="w-full rounded border border-gray-300 px-3 py-2"
+            />
             <input type="number" step="0.01" placeholder="Salary" {...register("salary")} className="w-full rounded border border-gray-300 px-3 py-2" />
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-500">Photo</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-gray-200"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-500">CV / resume</label>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-gray-200"
+              />
+            </div>
+
             {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
             {createStaff.isError && <p className="text-sm text-red-600">Failed to create staff.</p>}
             <button

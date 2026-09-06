@@ -1,8 +1,10 @@
 import bcrypt from "bcrypt";
+import crypto from "node:crypto";
 import { prisma } from "../../lib/prisma";
 import { generateIdNumber, generateTempPassword } from "../../lib/credentials";
 import { NotFoundError } from "../../lib/errors";
 import { onboardingQueue } from "../../jobs/queues";
+import { putObject } from "../../lib/storage";
 import type { CreateStaffInput, UpdateContactInput, UpdateStaffInput } from "@school-mis/shared";
 
 export async function listStaff() {
@@ -13,13 +15,33 @@ export async function listStaff() {
   return staff.map(serializeStaff);
 }
 
-export async function createStaff(input: CreateStaffInput) {
+function extensionFor(file: Express.Multer.File): string {
+  const fromName = file.originalname.split(".").pop();
+  if (fromName && fromName.length <= 5) return fromName.toLowerCase();
+  return file.mimetype.split("/").pop() ?? "bin";
+}
+
+export async function createStaff(
+  input: CreateStaffInput,
+  files?: { photo?: Express.Multer.File; cv?: Express.Multer.File }
+) {
   const idNumber = await generateIdNumber(input.role);
   const tempPassword = generateTempPassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
+  // Generated up front (rather than left to the DB default) so the photo/CV
+  // can be uploaded under a stable key before the row exists.
+  const userId = crypto.randomUUID();
+  const imageUrl = files?.photo
+    ? await putObject(`staff-photos/${userId}.${extensionFor(files.photo)}`, files.photo.buffer)
+    : undefined;
+  const cvUrl = files?.cv
+    ? await putObject(`staff-cvs/${userId}.${extensionFor(files.cv)}`, files.cv.buffer)
+    : undefined;
+
   const user = await prisma.user.create({
     data: {
+      id: userId,
       role: input.role as any,
       email: input.email,
       phone: input.phone,
@@ -35,6 +57,8 @@ export async function createStaff(input: CreateStaffInput) {
           address: input.address,
           emergencyContact: input.emergency_contact,
           salary: input.salary,
+          imageUrl,
+          cvUrl,
         },
       },
     },
@@ -97,5 +121,7 @@ function serializeStaff(profile: any) {
     date_of_birth: profile.dateOfBirth,
     address: profile.address,
     salary: profile.salary,
+    image_url: profile.imageUrl,
+    cv_url: profile.cvUrl,
   };
 }

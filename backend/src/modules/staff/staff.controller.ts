@@ -6,7 +6,11 @@ export async function listStaffHandler(_req: Request, res: Response) {
 }
 
 export async function createStaffHandler(req: Request, res: Response) {
-  const staff = await staffService.createStaff(req.body);
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
+  const staff = await staffService.createStaff(req.body, {
+    photo: files?.photo?.[0],
+    cv: files?.cv?.[0],
+  });
   res.status(201).json(staff);
 }
 
