@@ -17,6 +17,7 @@ import {
   type CreateTimetableEntryInput,
 } from "@school-mis/shared";
 import { DashboardShell } from "../../components/DashboardShell";
+import { Modal } from "../../components/Modal";
 import { api } from "../../lib/api";
 
 const TABS = ["Overview", "Staff", "Academic Calendar", "Classes & Subjects", "Timetable"] as const;
@@ -105,64 +106,184 @@ function OverviewSection() {
   );
 }
 
+const STATUS_DOT: Record<string, string> = {
+  active: "bg-green-500",
+  pending: "bg-amber-500",
+  inactive: "bg-gray-400",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium capitalize text-gray-700">
+      <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[status] ?? "bg-gray-400"}`} />
+      {status}
+    </span>
+  );
+}
+
+function ROLE_LABEL(role: string): string {
+  return role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function StaffTable({
+  rows,
+  onDeactivate,
+}: {
+  rows: any[];
+  onDeactivate?: (id: string) => void;
+}) {
+  if (rows.length === 0) {
+    return <p className="px-1 py-4 text-sm text-gray-500">No staff in this group.</p>;
+  }
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
+            <th className="py-2 pr-4 font-medium">Name</th>
+            <th className="py-2 pr-4 font-medium">Role</th>
+            <th className="py-2 pr-4 font-medium">Contact</th>
+            <th className="py-2 pr-4 font-medium">ID number</th>
+            <th className="py-2 pr-4 font-medium">Status</th>
+            {onDeactivate && <th className="py-2 pr-4 font-medium" />}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {rows.map((s) => (
+            <tr key={s.id} className="hover:bg-gray-50">
+              <td className="py-2.5 pr-4 font-medium text-gray-900">
+                {s.first_name} {s.last_name}
+              </td>
+              <td className="py-2.5 pr-4 text-gray-600">{ROLE_LABEL(s.role)}</td>
+              <td className="py-2.5 pr-4 text-gray-600">{s.email ?? s.phone ?? "—"}</td>
+              <td className="py-2.5 pr-4 text-gray-600">{s.id_number ?? "—"}</td>
+              <td className="py-2.5 pr-4">
+                <StatusBadge status={s.status} />
+              </td>
+              {onDeactivate && (
+                <td className="py-2.5 pr-4 text-right">
+                  {s.status === "active" && (
+                    <button
+                      onClick={() => onDeactivate(s.id)}
+                      className="text-xs font-medium text-gray-500 hover:text-red-600"
+                    >
+                      Deactivate
+                    </button>
+                  )}
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function StaffSection() {
   const queryClient = useQueryClient();
+  const [showCreate, setShowCreate] = useState(false);
   const { data: staff } = useQuery({
     queryKey: ["staff"],
     queryFn: () => api.get("/staff").then((r) => r.data),
   });
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
-    useForm<CreateStaffInput>({ resolver: zodResolver(createStaffSchema) });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateStaffInput>({ resolver: zodResolver(createStaffSchema) });
 
   const createStaff = useMutation({
     mutationFn: (values: CreateStaffInput) => api.post("/staff", values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       reset();
+      setShowCreate(false);
     },
   });
 
+  const deactivate = useMutation({
+    mutationFn: (id: string) => api.post(`/staff/${id}/deactivate`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["staff"] }),
+  });
+
+  const list: any[] = staff ?? [];
+  const active = list.filter((s) => s.status === "active");
+  const pending = list.filter((s) => s.status === "pending");
+  const inactive = list.filter((s) => s.status === "inactive");
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card title="Create staff">
-        <form
-          onSubmit={handleSubmit((v) => createStaff.mutate(v))}
-          className="space-y-3"
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-6">
+          <div>
+            <p className="text-2xl font-semibold text-gray-900">{active.length}</p>
+            <p className="text-xs text-gray-500">Active</p>
+          </div>
+          <div>
+            <p className="text-2xl font-semibold text-gray-900">{pending.length}</p>
+            <p className="text-xs text-gray-500">Pending</p>
+          </div>
+          <div>
+            <p className="text-2xl font-semibold text-gray-900">{inactive.length}</p>
+            <p className="text-xs text-gray-500">Inactive</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400"
         >
-          <select {...register("role")} className="w-full rounded border border-gray-300 px-3 py-2">
-            <option value="registrar">Registrar</option>
-            <option value="accountant">Accountant</option>
-            <option value="teacher">Teacher</option>
-            <option value="librarian">Librarian</option>
-            <option value="it_staff">IT Staff</option>
-            <option value="admin">Admin</option>
-          </select>
-          <input placeholder="First name" {...register("first_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input placeholder="Last name" {...register("last_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input type="date" {...register("date_of_birth")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input placeholder="Address" {...register("address")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input placeholder="Email" {...register("email")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input placeholder="Phone" {...register("phone")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input type="number" step="0.01" placeholder="Salary" {...register("salary")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
-          {createStaff.isError && <p className="text-sm text-red-600">Failed to create staff.</p>}
-          <button disabled={isSubmitting} className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400 disabled:opacity-50">
-            Create + send onboarding email
-          </button>
-        </form>
+          + Create staff
+        </button>
+      </div>
+
+      <Card title={`Active staff (${active.length})`}>
+        <StaffTable rows={active} onDeactivate={(id) => deactivate.mutate(id)} />
       </Card>
 
-      <Card title="Staff directory">
-        <ul className="divide-y divide-gray-100 text-sm">
-          {(staff ?? []).map((s: any) => (
-            <li key={s.id} className="flex justify-between py-2">
-              <span>{s.first_name} {s.last_name} ({s.role})</span>
-              <span className="text-gray-500">{s.status}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {pending.length > 0 && (
+        <Card title={`Pending staff (${pending.length})`}>
+          <StaffTable rows={pending} />
+        </Card>
+      )}
+
+      {inactive.length > 0 && (
+        <Card title={`Inactive staff (${inactive.length})`}>
+          <StaffTable rows={inactive} />
+        </Card>
+      )}
+
+      {showCreate && (
+        <Modal title="Create staff" onClose={() => setShowCreate(false)}>
+          <form onSubmit={handleSubmit((v) => createStaff.mutate(v))} className="space-y-3">
+            <select {...register("role")} className="w-full rounded border border-gray-300 px-3 py-2">
+              <option value="registrar">Registrar</option>
+              <option value="accountant">Accountant</option>
+              <option value="teacher">Teacher</option>
+              <option value="librarian">Librarian</option>
+              <option value="it_staff">IT Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+            <input placeholder="First name" {...register("first_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input placeholder="Last name" {...register("last_name")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input type="date" {...register("date_of_birth")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input placeholder="Address" {...register("address")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input placeholder="Email" {...register("email")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input placeholder="Phone" {...register("phone")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input type="number" step="0.01" placeholder="Salary" {...register("salary")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+            {createStaff.isError && <p className="text-sm text-red-600">Failed to create staff.</p>}
+            <button
+              disabled={isSubmitting}
+              className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400 disabled:opacity-50"
+            >
+              Create + send onboarding email
+            </button>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
