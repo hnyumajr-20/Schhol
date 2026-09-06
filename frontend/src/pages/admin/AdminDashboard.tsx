@@ -5,12 +5,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createStaffSchema,
   createAcademicYearSchema,
+  createSemesterSchema,
+  createPeriodSchema,
   createClassSchema,
   createSubjectSchema,
   createTimetableSlotSchema,
   createTimetableEntrySchema,
   type CreateStaffInput,
   type CreateAcademicYearInput,
+  type CreateSemesterInput,
+  type CreatePeriodInput,
   type CreateClassInput,
   type CreateSubjectInput,
   type CreateTimetableSlotInput,
@@ -110,7 +114,13 @@ const STATUS_DOT: Record<string, string> = {
   active: "bg-green-500",
   pending: "bg-amber-500",
   inactive: "bg-gray-400",
+  upcoming: "bg-gray-400",
+  closed: "bg-gray-500",
 };
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
 
 function StatusBadge({ status }: { status: string }) {
   return (
@@ -358,6 +368,7 @@ function StaffSection() {
 
 function AcademicCalendarSection() {
   const queryClient = useQueryClient();
+  const [selectedYearId, setSelectedYearId] = useState<string | null>(null);
   const { data: years } = useQuery({
     queryKey: ["academic-years"],
     queryFn: () => api.get("/academic-years").then((r) => r.data),
@@ -375,30 +386,225 @@ function AcademicCalendarSection() {
     },
   });
 
+  const list: any[] = years ?? [];
+  const selectedYear = list.find((y) => y.id === selectedYearId);
+
+  if (selectedYear) {
+    return <AcademicYearDetail year={selectedYear} onBack={() => setSelectedYearId(null)} />;
+  }
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="space-y-6">
       <Card title="Create academic year">
-        <form onSubmit={handleSubmit((v) => createYear.mutate(v))} className="space-y-3">
-          <input placeholder="Name (e.g. 2026/2027)" {...register("name")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input type="date" {...register("start_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
-          <input type="date" {...register("end_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
+        <form onSubmit={handleSubmit((v) => createYear.mutate(v))} className="grid gap-3 sm:grid-cols-3">
+          <input
+            placeholder="Name (e.g. 2026/2027)"
+            {...register("name")}
+            className="rounded border border-gray-300 px-3 py-2 sm:col-span-3"
+          />
+          <input type="date" {...register("start_date")} className="rounded border border-gray-300 px-3 py-2" />
+          <input type="date" {...register("end_date")} className="rounded border border-gray-300 px-3 py-2" />
           <button className="rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">Create</button>
         </form>
-        <p className="mt-2 text-xs text-gray-500">
-          Semesters and periods are added from each year's detail once created (2 semesters, 3 periods each, per PRD 4.1.9).
-        </p>
       </Card>
 
       <Card title="Academic years">
+        {list.length === 0 && <p className="text-sm text-gray-500">No academic years yet.</p>}
         <ul className="divide-y divide-gray-100 text-sm">
-          {(years ?? []).map((y: any) => (
-            <li key={y.id} className="flex justify-between py-2">
-              <span>{y.name}</span>
-              <span className="text-gray-500">{y.status}</span>
+          {list.map((y) => (
+            <li key={y.id}>
+              <button
+                onClick={() => setSelectedYearId(y.id)}
+                className="flex w-full items-center justify-between py-3 text-left hover:bg-gray-50"
+              >
+                <span>
+                  <span className="font-medium text-gray-900">{y.name}</span>
+                  <span className="ml-2 text-xs text-gray-500">
+                    {y.semesters.length} semester{y.semesters.length === 1 ? "" : "s"}
+                  </span>
+                </span>
+                <span className="flex items-center gap-3">
+                  <StatusBadge status={y.status} />
+                  <span className="text-gray-400">→</span>
+                </span>
+              </button>
             </li>
           ))}
         </ul>
       </Card>
+    </div>
+  );
+}
+
+function AcademicYearDetail({ year, onBack }: { year: any; onBack: () => void }) {
+  const queryClient = useQueryClient();
+  const [showAddSemester, setShowAddSemester] = useState(false);
+  const [addPeriodFor, setAddPeriodFor] = useState<string | null>(null);
+
+  const semesterForm = useForm<CreateSemesterInput>({ resolver: zodResolver(createSemesterSchema) });
+  const createSemester = useMutation({
+    mutationFn: (values: CreateSemesterInput) => api.post(`/academic-years/${year.id}/semesters`, values),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["academic-years"] });
+      semesterForm.reset();
+      setShowAddSemester(false);
+    },
+  });
+
+  const periodForm = useForm<CreatePeriodInput>({ resolver: zodResolver(createPeriodSchema) });
+  const createPeriod = useMutation({
+    mutationFn: (values: CreatePeriodInput) => api.post(`/academic-years/semesters/${addPeriodFor}/periods`, values),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["academic-years"] });
+      periodForm.reset();
+      setAddPeriodFor(null);
+    },
+  });
+
+  const semesters = [...year.semesters].sort((a: any, b: any) => a.sequence - b.sequence);
+  const periodTargetSemester = semesters.find((s: any) => s.id === addPeriodFor);
+  const takenSemesterSeqs = semesters.map((s: any) => s.sequence);
+  const takenPeriodSeqs = periodTargetSemester ? periodTargetSemester.periods.map((p: any) => p.sequence) : [];
+
+  return (
+    <div className="space-y-6">
+      <button onClick={onBack} className="text-sm font-medium text-gray-600 hover:text-gray-900">
+        ← Back to academic years
+      </button>
+
+      <Card title={year.name}>
+        <div className="flex items-center gap-3 text-sm text-gray-600">
+          <span>
+            {formatDate(year.start_date)} – {formatDate(year.end_date)}
+          </span>
+          <StatusBadge status={year.status} />
+        </div>
+      </Card>
+
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Semesters</h3>
+        {semesters.length < 2 && (
+          <button
+            onClick={() => setShowAddSemester(true)}
+            className="rounded bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-gray-900 hover:bg-yellow-400"
+          >
+            + Add semester
+          </button>
+        )}
+      </div>
+
+      {semesters.length === 0 && <p className="text-sm text-gray-500">No semesters yet.</p>}
+
+      {semesters.map((sem: any) => {
+        const periods = [...sem.periods].sort((a: any, b: any) => a.sequence - b.sequence);
+        return (
+          <Card key={sem.id} title={`${sem.name} (Semester ${sem.sequence})`}>
+            <div className="mb-3 flex items-center gap-3 text-xs text-gray-500">
+              <span>
+                {formatDate(sem.start_date)} – {formatDate(sem.end_date)}
+              </span>
+              <StatusBadge status={sem.status} />
+            </div>
+
+            <div className="mb-2 flex items-center justify-between">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Periods</h4>
+              {periods.length < 3 && (
+                <button
+                  onClick={() => setAddPeriodFor(sem.id)}
+                  className="text-xs font-medium text-yellow-700 hover:underline"
+                >
+                  + Add period
+                </button>
+              )}
+            </div>
+
+            {periods.length === 0 ? (
+              <p className="text-xs text-gray-500">No periods yet.</p>
+            ) : (
+              <ul className="divide-y divide-gray-100 text-sm">
+                {periods.map((p: any) => (
+                  <li key={p.id} className="flex items-center justify-between py-2">
+                    <span className="flex items-center gap-2">
+                      {p.name}
+                      {p.is_exam_period && (
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                          Exam
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {formatDate(p.start_date)} – {formatDate(p.end_date)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        );
+      })}
+
+      {showAddSemester && (
+        <Modal title="Add semester" onClose={() => setShowAddSemester(false)}>
+          <form onSubmit={semesterForm.handleSubmit((v) => createSemester.mutate(v))} className="space-y-3">
+            <select
+              {...semesterForm.register("sequence", { valueAsNumber: true })}
+              className="w-full rounded border border-gray-300 px-3 py-2"
+            >
+              {[1, 2]
+                .filter((n) => !takenSemesterSeqs.includes(n))
+                .map((n) => (
+                  <option key={n} value={n}>
+                    Semester {n}
+                  </option>
+                ))}
+            </select>
+            <input
+              placeholder="Name (e.g. First Semester)"
+              {...semesterForm.register("name")}
+              className="w-full rounded border border-gray-300 px-3 py-2"
+            />
+            <input type="date" {...semesterForm.register("start_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input type="date" {...semesterForm.register("end_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            {createSemester.isError && <p className="text-sm text-red-600">Failed to create semester.</p>}
+            <button className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">
+              Add semester
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {addPeriodFor && (
+        <Modal title="Add period" onClose={() => setAddPeriodFor(null)}>
+          <form onSubmit={periodForm.handleSubmit((v) => createPeriod.mutate(v))} className="space-y-3">
+            <select
+              {...periodForm.register("sequence", { valueAsNumber: true })}
+              className="w-full rounded border border-gray-300 px-3 py-2"
+            >
+              {[1, 2, 3]
+                .filter((n) => !takenPeriodSeqs.includes(n))
+                .map((n) => (
+                  <option key={n} value={n}>
+                    Period {n}
+                  </option>
+                ))}
+            </select>
+            <input
+              placeholder="Name (e.g. Period 1)"
+              {...periodForm.register("name")}
+              className="w-full rounded border border-gray-300 px-3 py-2"
+            />
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" {...periodForm.register("is_exam_period")} /> Exam period
+            </label>
+            <input type="date" {...periodForm.register("start_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            <input type="date" {...periodForm.register("end_date")} className="w-full rounded border border-gray-300 px-3 py-2" />
+            {createPeriod.isError && <p className="text-sm text-red-600">Failed to create period.</p>}
+            <button className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-gray-900 hover:bg-yellow-400">
+              Add period
+            </button>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
