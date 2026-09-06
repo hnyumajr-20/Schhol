@@ -109,7 +109,7 @@ CREATE TABLE users (
   role user_role NOT NULL,
   email CITEXT UNIQUE,
   phone VARCHAR(20) UNIQUE,
-  id_number VARCHAR(30) UNIQUE,               -- generated for students on approval (4.2.3)
+  id_number VARCHAR(30) UNIQUE,               -- generated for students on approval (4.2.3); staff get STF-1001, STF-1002, ... (one shared sequence across every staff role, not per-role prefixes)
   password_hash TEXT NOT NULL,
   must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
   status user_status NOT NULL DEFAULT 'active',
