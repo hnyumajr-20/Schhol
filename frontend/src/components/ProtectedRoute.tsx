@@ -8,6 +8,9 @@ export function ProtectedRoute({ allowedRoles }: { allowedRoles: UserRole[] }) {
   if (!accessToken || !user) {
     return <Navigate to="/login" replace />;
   }
+  if (user.must_change_password) {
+    return <Navigate to="/change-password" replace />;
+  }
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }

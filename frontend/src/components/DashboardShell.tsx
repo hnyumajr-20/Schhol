@@ -64,7 +64,7 @@ export function DashboardShell({
         </nav>
 
         <div className="space-y-2 border-t border-gray-800 px-4 py-4">
-          <p className="truncate text-xs text-gray-400">{user?.email ?? user?.idNumber}</p>
+          <p className="truncate text-xs text-gray-400">{user?.email ?? user?.id_number}</p>
           <button
             onClick={handleLogout}
             className="w-full rounded bg-gray-700 px-3 py-1.5 text-sm hover:bg-gray-600"

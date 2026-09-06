@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { loginSchema, type LoginInput } from "@school-mis/shared";
 import { api } from "../lib/api";
@@ -72,6 +72,10 @@ export function LoginPage() {
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
+
+        <Link to="/forgot-password" className="block text-center text-sm text-gray-600 hover:underline">
+          Forgot password?
+        </Link>
       </form>
     </div>
   );

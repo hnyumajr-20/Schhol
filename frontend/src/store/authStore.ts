@@ -5,8 +5,8 @@ export interface SessionUser {
   id: string;
   role: UserRole;
   email: string | null;
-  idNumber: string | null;
-  mustChangePassword: boolean;
+  id_number: string | null;
+  must_change_password: boolean;
 }
 
 interface AuthState {

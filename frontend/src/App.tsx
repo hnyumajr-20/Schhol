@@ -1,7 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RequireAuth } from "./components/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { RegistrarDashboard } from "./pages/registrar/RegistrarDashboard";
 import { TeacherDashboard } from "./pages/teacher/TeacherDashboard";
@@ -22,6 +26,7 @@ const ROLE_HOME: Record<string, string> = {
 function RoleHome() {
   const user = useAuthStore((s) => s.user);
   if (!user) return <Navigate to="/login" replace />;
+  if (user.must_change_password) return <Navigate to="/change-password" replace />;
   return <Navigate to={ROLE_HOME[user.role] ?? "/login"} replace />;
 }
 
@@ -29,7 +34,13 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/" element={<RoleHome />} />
+
+      <Route element={<RequireAuth />}>
+        <Route path="/change-password" element={<ChangePasswordPage />} />
+      </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
         <Route path="/admin" element={<AdminDashboard />} />
